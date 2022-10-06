@@ -6,22 +6,29 @@ use PDO, PDOException;
 
 class MemberController extends Controller
 {
+  const MEMBER_ID = "id";
+  const FIRST_NAME = "firstName";
+  const LAST_NAME = "lastName";
+  const DATE_OF_BIRTH = "dateOfBirth";
+  const CREATED_AT = "createdAt";
+  const USER_ID = "userId";
+
   public function index($request, $response)
   {
     try {
       $sql = "
       SELECT
-        m.first_name,
-        m.last_name,
-        m.date_of_birth,
-        u.username as created_by,
-        m.created_at
+        m.firstName,
+        m.lastName,
+        m.dateOfBirth,
+        u.username as createdBy,
+        m.createdAt
       FROM
         members m
       LEFT JOIN
         users u
       ON
-        u.id = m.created_by
+        u.id = m.userId
     ";
 
       $stmt = $this->c->db->query($sql);
@@ -47,28 +54,36 @@ class MemberController extends Controller
     try {
       $sql = "
         INSERT INTO members (
-          first_name,
-          last_name,
-          date_of_birth,
-          created_by,
-          created_at
+          userId,
+          firstName,
+          lastName,
+          dateOfBirth,
+          createdAt
         ) VALUES (
-          :first_name,
-          :last_name,
-          :date_of_birth,
-          :created_by,
-          :created_at
+          :%s,
+          :%s,
+          :%s,
+          :%s,
+          :%s
         )
       ";
+
+      $sql = vsprintf($sql, array(
+        self::USER_ID,
+        self::FIRST_NAME,
+        self::LAST_NAME,
+        self::DATE_OF_BIRTH,
+        self::CREATED_AT
+      ));
 
       $stmt = $this->c->db->prepare($sql);
 
       $stmt->execute([
-        ':first_name' => $request->getParam('first_name'),
-        ':last_name' => $request->getParam('last_name'),
-        ':date_of_birth' => $request->getParam('date_of_birth'),
-        ':created_by' => $request->getParam('created_by'),
-        ':created_by' => date("Y-m-d")
+        self::FIRST_NAME => $request->getParam(self::FIRST_NAME),
+        self::LAST_NAME => $request->getParam(self::LAST_NAME),
+        self::DATE_OF_BIRTH => $request->getParam(self::DATE_OF_BIRTH),
+        self::USER_ID => $request->getParam(self::USER_ID),
+        self::CREATED_AT => date("Y-m-d")
       ]);
 
       return $response->withJSON([
@@ -89,13 +104,17 @@ class MemberController extends Controller
       $sql = "
         DELETE FROM
           members
-        WHERE id = :id
+        WHERE id = :%s
       ";
+
+      $sql = vsprintf($sql, array(
+        self::MEMBER_ID
+      ));
 
       $stmt = $this->c->db->prepare($sql);
 
       $stmt->execute([
-        ':id' => $request->getParam('id')
+        self::MEMBER_ID => $request->getParam(self::MEMBER_ID)
       ]);
 
       return $response->withJSON([
@@ -116,19 +135,26 @@ class MemberController extends Controller
       $sql = "
         UPDATE members
         SET
-          first_name = :first_name,
-          last_name = :last_name,
-          date_of_birth = :date_of_birth
-        WHERE id = :id
+          first_name = :%s,
+          last_name = :%s,
+          date_of_birth = :%s
+        WHERE id = :%s
       ";
+
+      $sql = vsprintf($sql, array(
+        self::FIRST_NAME,
+        self::LAST_NAME,
+        self::DATE_OF_BIRTH,
+        self::MEMBER_ID
+      ));
 
       $stmt = $this->c->db->prepare($sql);
 
       $stmt->execute([
-        ':id' => $request->getParam('id'),
-        ':first_name' => $request->getParam('first_name'),
-        ':last_name' => $request->getParam('last_name'),
-        ':date_of_birth' => $request->getParam('date_of_birth')
+        self::MEMBER_ID => $request->getParam(self::MEMBER_ID),
+        self::FIRST_NAME => $request->getParam(self::FIRST_NAME),
+        self::LAST_NAME => $request->getParam(self::LAST_NAME),
+        self::DATE_OF_BIRTH => $request->getParam(self::DATE_OF_BIRTH)
       ]);
 
       return $response->withJSON([

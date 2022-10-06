@@ -1,6 +1,5 @@
 <?php
 
-namespace Setting;
 // Create and configure Slim app
 return [
   'settings' => [

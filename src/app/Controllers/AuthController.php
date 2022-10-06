@@ -8,9 +8,9 @@ use \Firebase\JWT\JWT;
 
 class AuthController extends Controller
 {
-  const USERNAME = ":username";
-  const PASSWORD = ":password";
-  const CREATED_AT = ":created_at";
+  const USERNAME = "username";
+  const PASSWORD = "password";
+  const CREATED_AT = "createdAt";
 
   /**
    * TODO: login user
@@ -28,18 +28,18 @@ class AuthController extends Controller
 				FROM
 					users
 				WHERE
-					username = %s
+					username = :%s
 				AND
-					password = %s
+					password = :%s
 			";
 
-      $sql = sprintf($sql, self::USERNAME, self::PASSWORD);
+      $sql = vsprintf($sql, array(self::USERNAME, self::PASSWORD));
 
       $stmt = $this->c->db->prepare($sql);
 
       $stmt->execute([
-        self::USERNAME => $request->getParam('username'),
-        self::PASSWORD => $request->getParam('password')
+        self::USERNAME => $request->getParam(self::USERNAME),
+        self::PASSWORD => $request->getParam(self::PASSWORD)
       ]);
 
       // Get logged in user's data
@@ -85,8 +85,8 @@ class AuthController extends Controller
   {
     try {
       $user = [
-        'username' => $request->getParam('username'),
-        'password' => $request->getParam('password'),
+        'username' => $request->getParam(self::USERNAME),
+        'password' => $request->getParam(self::PASSWORD),
         'confirmPassword' => $request->getParam('confirmPassword')
       ];
       $passwordMinimumLength = 8;
@@ -100,13 +100,13 @@ class AuthController extends Controller
           createdAt
         )
 				VALUES (
-          %s,
-          %s,
-          %s
+          :%s,
+          :%s,
+          :%s
         )
 			";
 
-      $sql = sprintf($sql, self::USERNAME, self::PASSWORD, self::CREATED_AT);
+      $sql = vsprintf($sql, array(self::USERNAME, self::PASSWORD, self::CREATED_AT));
 
       /* It checks if the username already exists in the database. */
       if ($this->isUsernameExist($user['username'])) {
@@ -118,7 +118,7 @@ class AuthController extends Controller
       }
 
       /* It checks if the password is the same as the confirm password. */
-      if (!(AuthHelper::isConfirmPassword($user['password'], $user['confirmPassword']))) {
+      if (!(AuthHelper::isConfirmPassword($user[self::PASSWORD], $user['confirmPassword']))) {
         $error = true;
         $result = [
           'message' => "Password are not same.",
@@ -127,7 +127,7 @@ class AuthController extends Controller
       }
 
       /* It checks if the password length is greater than the passed value. */
-      if (!(AuthHelper::isPasswordLength($passwordMinimumLength, $user['password']))) {
+      if (!(AuthHelper::isPasswordLength($passwordMinimumLength, $user[self::PASSWORD]))) {
         $error = true;
         $result = [
           'message' => 'Password need at least ' . $passwordMinimumLength . ' characters.',
@@ -142,8 +142,8 @@ class AuthController extends Controller
       $stmt = $this->c->db->prepare($sql);
 
       $stmt->execute([
-        self::USERNAME => $user['username'],
-        self::PASSWORD => $user['password'],
+        self::USERNAME => $user[self::USERNAME],
+        self::PASSWORD => $user[self::PASSWORD],
         self::CREATED_AT => date('Y-m-d H:i:s')
       ]);
 
@@ -171,10 +171,10 @@ class AuthController extends Controller
 			FROM
 				users
 			WHERE
-				username = %s
+				username = :%s
 		";
 
-    $sql = sprintf($sql, self::USERNAME);
+    $sql = vsprintf($sql, array(self::USERNAME));
 
     $stmt = $this->c->db->prepare($sql);
 
