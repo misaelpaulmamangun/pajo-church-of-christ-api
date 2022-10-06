@@ -52,28 +52,23 @@ class MemberController extends Controller
   public function create($request, $response)
   {
     try {
-      $sql = "
-        INSERT INTO members (
-          userId,
-          firstName,
-          lastName,
-          dateOfBirth,
-          createdAt
-        ) VALUES (
-          :%s,
-          :%s,
-          :%s,
-          :%s,
-          :%s
-        )
-      ";
+      $sql = "INSERT INTO members (%s) VALUES (%s)";
 
-      $sql = vsprintf($sql, array(
+      $columns = array(
         self::USER_ID,
         self::FIRST_NAME,
         self::LAST_NAME,
         self::DATE_OF_BIRTH,
         self::CREATED_AT
+      );
+
+      $values = array_map(function ($columns) {
+        return ':' . $columns;
+      }, $columns);
+
+      $sql = vsprintf($sql, array(
+        implode(",", $columns),
+        implode(",", $values)
       ));
 
       $stmt = $this->c->db->prepare($sql);
@@ -135,9 +130,9 @@ class MemberController extends Controller
       $sql = "
         UPDATE members
         SET
-          first_name = :%s,
-          last_name = :%s,
-          date_of_birth = :%s
+          firstName = :%s,
+          lastName = :%s,
+          dateOfBirth = :%s
         WHERE id = :%s
       ";
 
